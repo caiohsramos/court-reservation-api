@@ -6,24 +6,32 @@ import (
 
 	"github.com/caiohsramos/court-reservation-api/src/repo"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
-func GetAllReservations(repo repo.RepoAccess) gin.HandlerFunc {
+// GetAllReservations is a handler to get all reservations
+func GetAllReservations(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		reservations := repo.GetAllReservations()
-		c.JSON(200, reservations)
+		var result repo.Reservation
+		db.Find(&result)
+		c.JSON(200, result)
 	}
 }
 
-func GetReservationID(repo repo.RepoAccess) gin.HandlerFunc {
+// GetReservationID is a handler to get a reservation by ID
+func GetReservationID(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.Param("id"))
-		reservation, err := repo.GetReservationID(id)
+		var result repo.Reservation
+		err := db.First(&result, id).Error
 		if err != nil {
-			c.JSON(401, gin.H{"status": fmt.Sprint("Not Found ", id)})
+			c.JSON(401, gin.H{
+				"status": fmt.Sprint("Not Found ", id),
+				"error":  err,
+			})
 			return
 		}
 
-		c.JSON(200, reservation)
+		c.JSON(200, result)
 	}
 }
